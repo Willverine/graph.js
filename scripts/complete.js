@@ -24,6 +24,11 @@ function graph() {
     this.canvas = _.util.createCanvas(800, 600);
     this.context = this.canvas.getContext("2d");
     this.data = [];//a list of points of x and y values to be drawn. 
+
+    //maybe timing events need to be local?
+    this.now;
+    this.then = Date.now();
+    this.delta;
 }
 
 //these methods are protyped so they are used by All instances of this object. 
@@ -53,7 +58,7 @@ graph.prototype.draw = function () {
 
 
 
-
+//UPDATE TIMING ITEMS ARE NOW LOCAL TO THE OBJECT
 //functions used by the graph object:
 //draws at the FPS rate (taking into account the overhead from other functions)
 //this is the FPS control and other drawing shit that can kinda be pushed to the side for now.
@@ -67,10 +72,10 @@ var interval = 1000 / fps;//interval time
 var delta;//delta time
 function initDrawLoop(obj) {
     requestAnimationFrame(function () { initDrawLoop(obj); });//requests the browser to draw a frame before the next repaint.
-    now = Date.now();
-    delta = now - then;
-    if (delta > interval) {//for FPS setting
-        then = now - (delta % interval);
+    obj.now = Date.now();
+    obj.delta = obj.now - obj.then;
+    if (obj.delta > interval) {//for FPS setting
+        obj.then = obj.now - (obj.delta % interval);
         obj.context.clearRect(0, 0, obj.canvas.width, obj.canvas.height);//wipe the display
         //---------- add the actual content to be drawn:
         obj.draw();
@@ -83,14 +88,15 @@ function initDrawLoop(obj) {
 
 //delete this later
 var g = new graph();
-g.load([-10, 10, -10, 10], [new _.point.Point(-2, 1), new _.point.Point(3, 4), new _.point.Point(6, -3), new _.point.Point(5, 1)]);
+g.load([-10, 10, -10, 10], [new _.point.Point(-2, 1), new _.point.Point(3, 4), new _.point.Point(6, -3), new _.point.Point(9, 1)]);
+var gf = new graph();
+gf.load([-5, 7, -10, 5], [new _.point.Point(-2, 1), new _.point.Point(1, 2), new _.point.Point(2, -3), new _.point.Point(3, 1)]);
 
 
 //takes a reference to the object being modified and the limits of the graph. 
 function initialiseAxis(obj, lims) {
     //lims to be an array 4 items long corresponding to the xLeft, xRight, yTop, yBottom values
     //modify the obj.limits if necessary
-    //obj.limits = { xLeft: lims[0], xRight: lims[1], yTop: lims[3], yBottom: lims[2] };
     obj.limits.xLeft = lims[0];
     obj.limits.xRight = lims[1];
     obj.limits.yTop = lims[3];
@@ -104,6 +110,8 @@ function initialiseAxis(obj, lims) {
 function loadData(obj, data) {
     //data should be a lsit of Points to be drawn. (Coordinates of the graph)
     obj.data = data;
+    //this Should actually take a normal array and convert it to the point type. 
+    //so like input of data like [[1,0],[2,3],[5,2],etc];
 }
 
 
@@ -114,6 +122,7 @@ function getMouse(event,obj) {//updates mouse x and y
     var y = event.clientY - rect.top;
     obj.mousePoint.x = x;
     obj.mousePoint.y = y;
+    console.log(obj);
     //debugged and successfully works 18/12
 }
 
@@ -218,6 +227,7 @@ function drawData(obj) {
             var p = d[i];//point = the item at d's index
             //var p2 = d[i + 1];
             ctx.lineTo((p.x * xUnits) + xOffset, -(p.y * yUnits) + yOffset);
+            ctx.stroke();
         }
         //move from the last point of the array to the x axis and complete the shape then fill it if necessary
         ctx.lineTo((d[d.length - 1].x * xUnits) + xOffset, 0 + yOffset);
