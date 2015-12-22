@@ -9,10 +9,12 @@ This takes advantage of browserify.js to compile the multiple files into one com
 var _ = {};//keeps required elements out of global scope and stuff; better memory management.
 _.point = require("./point.js");
 _.util = require("./util.js");
+_.label = require("./label.js");
 
 function graph() {
     this.originPoint = new _.point.Point(0, 0);//point where it is all drawn from on the canvas
     this.mousePoint = new _.point.Point(0, 0);//mouse point
+    this.mousePointIndex = null;
     this.limits = { xLeft: -10, xRight: 10, yTop: 10, yBottom: -10, xLen: (this.xRight - this.xLeft), yLen: (this.yTop - this.yBot) };//the values on the axis limits. initialised in the Load function 
     this.showGrid = true;//draw a grid (or not)
     this.drawAxis = true;//draw the axis (or not)
@@ -23,6 +25,7 @@ function graph() {
     this.canvas = _.util.createCanvas(800, 600);
     this.context = this.canvas.getContext("2d");
     this.data = [];//a list of points of x and y values to be drawn. 
+    this.labels = [];
 
     //maybe timing events need to be local?
     this.now;
@@ -53,6 +56,7 @@ graph.prototype.draw = function () {
     drawLabels(this);
     drawData(this);
     drawTooltips(this);
+    drawTextBox(this);
 }
 
 
@@ -85,11 +89,7 @@ function initDrawLoop(obj) {
     }
 }
 
-//delete this later
-var g = new graph();
-g.load([-10, 10, -10, 10], [new _.point.Point(-2, 1), new _.point.Point(3, 4), new _.point.Point(6, -3), new _.point.Point(9, 1)]);
-var gf = new graph();
-gf.load([-5, 7, -10, 5], [new _.point.Point(-2, 1), new _.point.Point(1, 2), new _.point.Point(2, -3), new _.point.Point(3, 1)]);
+
 
 
 //takes a reference to the object being modified and the limits of the graph. 
@@ -106,9 +106,10 @@ function initialiseAxis(obj, lims) {
 
 
 //takes data and feeds it into the objects data list;
-function loadData(obj, data) {
+function loadData(obj, data, lab) {
     //data should be a lsit of Points to be drawn. (Coordinates of the graph)
     obj.data = data;
+    //obj.labels.push(lab);//adds the label to the list of labels
     //this Should actually take a normal array and convert it to the point type. 
     //so like input of data like [[1,0],[2,3],[5,2],etc];
 }
@@ -160,6 +161,22 @@ function drawGrid(obj) {
 //draw the tooltips like if mosue is over a point print its value. or the T value, whatever. 
 function drawTooltips(obj) {
     //do laters only if mouse is over a point or whatever
+    //if obj.mousePointIndex not equal to null then the mouse is over that index at that point so draw the thing:
+    //console.log(obj.mousePointIndex);
+    var xOffset = obj.canvas.width / 2;//the x and y offset to make the starting point (0,0) (so it is drawn from the middle)
+    var yOffset = obj.canvas.height / 2;
+    var xUnits = obj.canvas.width / obj.limits.xLen;//these are the pixels per unit on the graph.
+    var yUnits = obj.canvas.height / obj.limits.yLen;
+    if (obj.mousePointIndex != null) {
+        var p = obj.data[obj.mousePointIndex];
+        obj.context.rect((p.x * xUnits) + xOffset - 15, -(p.y * yUnits) + yOffset - 20, 30, 16);
+        obj.context.fillStyle = "#000000";
+        obj.context.fillText(p.x + ", " + p.y, (p.x * xUnits) + xOffset, -(p.y * yUnits) + yOffset - 10)
+        //TODO: 
+        //check if it is a NEGATIVE y value and if so draw this tooltip thing Below the line instead of above (is neater)
+        obj.context.stroke();
+    }
+    obj.mousePointIndex = null;
 }
 
 
@@ -212,6 +229,15 @@ function drawData(obj) {
         //FOR DOT POINT
         ctx.fillRect((p.x * xUnits) + xOffset - 2, -(p.y * yUnits) + yOffset - 2, 4, 4);//draws a rect at point t,t of size 4,4
         //the -2 are just so the point is centered around that position
+
+        //check if the mouse point is Near one of these particular points: if so set the mousePointIndex to this i value.
+        var ix = (p.x * xUnits) + xOffset;
+        var iy = -(p.y * yUnits) + yOffset;
+        if (obj.mousePoint.x > (ix - 8) && obj.mousePoint.x < (ix + 8) && obj.mousePoint.y > (iy - 8) && obj.mousePoint.y < (iy + 8)) {
+            //this means current point is within 10 units/pixels of a point:
+            obj.mousePointIndex = i;
+        }
+
     }
 
     
@@ -237,3 +263,28 @@ function drawData(obj) {
 
 
 }
+
+
+function drawTextBox(obj) {
+    //should draw each label in the labels list
+    if (obj.labels.length > 0) {
+        for (var i = 0; i < obj.labels.length; i++) {
+            //obj.context.rect(obj.labels[i].point.x, obj.labels[i].point.y, 20, 30);
+            obj.context.fillText(obj.labels[i].text, obj.labels[i].point.x, obj.labels[i].point.y);
+            obj.fillStyle = "#000000";
+            //obj.context.rect(obj.labels[i].point.x, obj.labels[i].point.y, 20, 20);
+            //obj.context.stroke();
+        }
+    }
+    
+}
+
+
+
+//delete this later
+var g = new graph();
+g.load([-10, 10, -10, 10], [new _.point.Point(-2, 1), new _.point.Point(3, 4), new _.point.Point(6, -3), new _.point.Point(9, 1)]);
+var gf = new graph();
+
+gf.load([-5, 7, -10, 5], [new _.point.Point(-2, 1), new _.point.Point(1, 2), new _.point.Point(2, -3), new _.point.Point(3, 1)]);
+gf.labels.push(new _.label.Label(50, 30, function () { return gf.data[0].x; }()));
