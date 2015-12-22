@@ -3,6 +3,7 @@
 This is the graph object that will handle all the drawing and rendering of data.
 Create this object, feed the data and provide sizes, etc; and see it drawn and whatnot.
 This takes advantage of browserify.js to compile the multiple files into one complete.js
+Open source license; anyone can use and reuse as long as credit is given to this original.
 @author William Owers 03/12/2016
 */
 
@@ -39,7 +40,7 @@ graph.prototype.load = function (limits, data) {
     var that = this;
     initialiseAxis(this, limits);
     loadData(this, data);
-    this.canvas.addEventListener("mousedown", function (event) { getMouse(event, that); }, false);
+    this.canvas.addEventListener("mousemove", function (event) { getMouse(event, that); }, false);
     initDrawLoop(this);
     this.context.font = "14px Georgia";
     this.context.textAlign = "center";
@@ -49,6 +50,7 @@ graph.prototype.update = function () {
     //getMouse(this);
     
     dataUpdate(this);
+    //this.mousePointIndex = null;
 }
 
 graph.prototype.draw = function () {
@@ -58,6 +60,11 @@ graph.prototype.draw = function () {
     drawData(this);
     drawTooltips(this);
     drawTextBox(this);
+}
+
+graph.prototype.newLabel = function (x,y,text) {
+    //this functino should produce a label with given inputs x,y,and text. (or like text item)
+    this.labels.push(new _.label.Label(x, y, text));
 }
 
 
@@ -109,10 +116,13 @@ function initialiseAxis(obj, lims) {
 //takes data and feeds it into the objects data list;
 function loadData(obj, data, lab) {
     //data should be a lsit of Points to be drawn. (Coordinates of the graph)
-    obj.data = data;
-    //obj.labels.push(lab);//adds the label to the list of labels
+    //obj.data = data;
+    //obj.labels.push(lab);//adds the label to the list of labels DO LATER? MAYBE NOT NECESSARY
     //this Should actually take a normal array and convert it to the point type. 
     //so like input of data like [[1,0],[2,3],[5,2],etc];
+    for (var i = 0; i < data.length; i++) {
+        obj.data.push(new _.point.Point(data[i][0],data[i][1]));
+    }
 }
 
 
@@ -123,14 +133,29 @@ function getMouse(event,obj) {//updates mouse x and y
     var y = event.clientY - rect.top;
     obj.mousePoint.x = x;
     obj.mousePoint.y = y;
-    console.log(obj);
+    //console.log(obj);
     //debugged and successfully works 18/12
+    //additional functionality added for mouse clicking:
+    //console.log(event.buttons);
+    if (event.buttons == 1 && obj.mousePointIndex != null) {
+        //assuming the user is clicking and holding, and is over a point on the graph:
+        var xOffset = obj.canvas.width / 2;//the x and y offset to make the starting point (0,0) (so it is drawn from the middle)
+        var yOffset = obj.canvas.height / 2;
+        var xUnits = obj.canvas.width / obj.limits.xLen;//these are the pixels per unit on the graph.
+        var yUnits = obj.canvas.height / obj.limits.yLen;
+        //super inneficient to calculate them every call but works for this beta version anyway
+        obj.data[obj.mousePointIndex].x = (x-xOffset)/xUnits;
+        obj.data[obj.mousePointIndex].y = -(y-yOffset)/yUnits;
+        //console.log("MOVEMENMT");
+        this.mousePointIndex = null;
+    }
 }
 
 
 //function moves data along or updates the origin point for movement or whatever
 function dataUpdate(obj) {
     //obj.data = [];
+    //this function probably isn't necessary as all variables are publically accessible so can modify them directly and they will be updated.
 }
 
 
@@ -177,35 +202,37 @@ function drawTooltips(obj) {
         //check if it is a NEGATIVE y value and if so draw this tooltip thing Below the line instead of above (is neater)
         obj.context.stroke();
     }
-    obj.mousePointIndex = null;
+    //obj.mousePointIndex = null;
 }
 
 
 function drawLabels(obj) {
     //this function should draw the labels on the axises and whatnot
     //first init some like measurements like number of points (one per unit) and whatnot
-    var xOffset = obj.canvas.width / 2;//the x and y offset to make the starting point (0,0) (so it is drawn from the middle)
-    var yOffset = obj.canvas.height / 2;
-    var xUnits = obj.canvas.width / obj.limits.xLen;//these are the pixels per unit on the graph.
-    var yUnits = obj.canvas.height / obj.limits.yLen;
-    var ctx = obj.context;
-    ctx.fillStyle = "#000000"
-    //now need to loop through the units we need to print items for:
-    //on the x axis we want vertical 'ticks' and on the y axis we want horizontal 'ticks' say 9 pixels long (?)
-    for (var i = obj.limits.xLeft; i < obj.limits.xRight; i++) {
-        //loops through each unit on the x axis
-        //fill a rect (1 pix thin so a line) just above the point on the line till just below it
-        //fillRect xPoint, y + 4, 1, 9)
-        ctx.fillRect((xUnits * i) + xOffset, -4 + yOffset, 1, 9);//negative - value so it is the right side of the axis
-        ctx.fillText(i, (xUnits * i) + xOffset, 15 + yOffset);
-    }
-    //now same for yAxis
-    for (var i = obj.limits.yBottom; i < obj.limits.yTop; i++) {
-        //loops through each unit on the y axis
-        //fill a rect (1 pix thin so a line) just left of the point on the line till just right of it
-        //fillRect( xOffset - 4, (yUnits * i) + yOffset, 9, 1)
-        ctx.fillRect(xOffset - 4, (yUnits * i) + yOffset, 9, 1);//negative - value so it is the right side of the axis
-        ctx.fillText(-i, xOffset + 15, (yUnits * i) + yOffset + 4);
+    if (obj.drawAxis) {
+        var xOffset = obj.canvas.width / 2;//the x and y offset to make the starting point (0,0) (so it is drawn from the middle)
+        var yOffset = obj.canvas.height / 2;
+        var xUnits = obj.canvas.width / obj.limits.xLen;//these are the pixels per unit on the graph.
+        var yUnits = obj.canvas.height / obj.limits.yLen;
+        var ctx = obj.context;
+        ctx.fillStyle = "#000000"
+        //now need to loop through the units we need to print items for:
+        //on the x axis we want vertical 'ticks' and on the y axis we want horizontal 'ticks' say 9 pixels long (?)
+        for (var i = obj.limits.xLeft; i < obj.limits.xRight; i++) {
+            //loops through each unit on the x axis
+            //fill a rect (1 pix thin so a line) just above the point on the line till just below it
+            //fillRect xPoint, y + 4, 1, 9)
+            ctx.fillRect((xUnits * i) + xOffset, -4 + yOffset, 1, 9);//negative - value so it is the right side of the axis
+            ctx.fillText(i, (xUnits * i) + xOffset, 15 + yOffset);
+        }
+        //now same for yAxis
+        for (var i = obj.limits.yBottom; i < obj.limits.yTop; i++) {
+            //loops through each unit on the y axis
+            //fill a rect (1 pix thin so a line) just left of the point on the line till just right of it
+            //fillRect( xOffset - 4, (yUnits * i) + yOffset, 9, 1)
+            ctx.fillRect(xOffset - 4, (yUnits * i) + yOffset, 9, 1);//negative - value so it is the right side of the axis
+            ctx.fillText(-i, xOffset + 15, (yUnits * i) + yOffset + 4);
+        }
     }
 }
 
@@ -259,10 +286,12 @@ function drawData(obj) {
         ctx.lineTo((d[d.length - 1].x * xUnits) + xOffset, 0 + yOffset);
         //ctx.lineTo((d[0].x * xUnits) + xOffset, 0)
         ctx.closePath();
-        ctx.fill();
+        if (obj.fillArea) {
+            ctx.fill();
+        }
     }
 
-
+    //obj.data[0].x += 0.01;
 }
 
 
@@ -271,8 +300,9 @@ function drawTextBox(obj) {
     if (obj.labels.length > 0) {
         for (var i = 0; i < obj.labels.length; i++) {
             //obj.context.rect(obj.labels[i].point.x, obj.labels[i].point.y, 20, 30);
-            obj.context.fillText(obj.labels[i].text, obj.labels[i].point.x, obj.labels[i].point.y);
-            obj.fillStyle = "#000000";
+            obj.context.fillStyle = "#000000";
+            obj.context.fillText(obj.labels[i].text(), obj.labels[i].point.x, obj.labels[i].point.y);
+            
             //obj.context.rect(obj.labels[i].point.x, obj.labels[i].point.y, 20, 20);
             //obj.context.stroke();
         }
@@ -282,14 +312,8 @@ function drawTextBox(obj) {
 
 
 
-//delete this later
-var g = new graph();
-g.load([-10, 10, -10, 10], [new _.point.Point(-2, 1), new _.point.Point(3, 4), new _.point.Point(6, -3), new _.point.Point(9, 1)]);
-var gf = new graph();
-
-gf.load([-5, 7, -10, 5], [new _.point.Point(-2, 1), new _.point.Point(1, 2), new _.point.Point(2, -3), new _.point.Point(3, 1)]);
-gf.labels.push(new _.label.Label(50, 30, function () { return gf.data[0].x; }()));
-},{"./label.js":2,"./point.js":3,"./util.js":4}],2:[function(require,module,exports){
+module.exports.graph = graph;
+},{"./label.js":2,"./point.js":3,"./util.js":5}],2:[function(require,module,exports){
 /*
 Object Discription:
 */
@@ -375,6 +399,39 @@ module.exports.Point = Point;
 //end
 },{}],4:[function(require,module,exports){
 /*
+This is to demonstrate the capabilities of the graph currently
+*/
+
+//require the graph class
+var graph = require("./graph.js");
+
+
+
+//delete this later
+var g = new graph.graph();
+//the first array input is the graph limits on the x axis and the y axis.
+g.load([-10, 10, -10, 10], [[-2, 1], [3, 4], [6, -3], [9, 1]]);
+g.fillArea = false;//shows how to modify some options for different results:
+//g.drawGrid = false; would work if i had a grid draw-able (WIP)
+//g.drawAxis = false;
+//g.showLabels = false;
+//g.drawLines = false;
+
+
+var gf = new graph.graph();
+gf.load([-5, 7, -10, 5], [[-2, 1], [1, 2], [2, -3], [3, 1]]);
+gf.newLabel(80, 30, function () { return gf.data[0].x });
+
+
+//after modification 'compile' this to ../complete.js with the command:
+//     " browserify test.js -o ../complete.js "
+//in terminal assuming you have browserify installed with npm.
+//you can get node and then use NPM from any command line (on windows anyway)
+//or i think you can download NPM directly idk. regardless it works. 
+//to install browserify globally (command accessible everywhere: )
+//     " npm install -g browserify "
+},{"./graph.js":1}],5:[function(require,module,exports){
+/*
 Object Discription:
 Utility functions for use elsewhere
 */
@@ -415,4 +472,4 @@ module.exports.createCanvas = createCanvas;
 module.exports.loadImage = loadImage;
 module.exports.boldPrint = boldPrint;
 //end
-},{}]},{},[1]);
+},{}]},{},[4]);
