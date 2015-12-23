@@ -17,6 +17,7 @@ function graph() {
     this.originPoint = new _.point.Point(0, 0);//point where it is all drawn from on the canvas
     this.mousePoint = new _.point.Point(0, 0);//mouse point
     this.mousePointIndex = null;
+    this.mousePointClick = null;
     this.limits = { xLeft: -10, xRight: 10, yTop: 10, yBottom: -10, xLen: (this.xRight - this.xLeft), yLen: (this.yTop - this.yBot) };//the values on the axis limits. initialised in the Load function 
     this.showGrid = true;//draw a grid (or not)
     this.drawAxis = true;//draw the axis (or not)
@@ -41,6 +42,8 @@ graph.prototype.load = function (limits, data) {
     initialiseAxis(this, limits);
     loadData(this, data);
     this.canvas.addEventListener("mousemove", function (event) { getMouse(event, that); }, false);
+    this.canvas.addEventListener("mousedown", function (event) { getMouseClick(event, that); }, false);
+    this.canvas.addEventListener("mouseup", function (event) { getMouseUp(event, that); }, false);
     initDrawLoop(this);
     this.context.font = "14px Georgia";
     this.context.textAlign = "center";
@@ -58,6 +61,8 @@ graph.prototype.draw = function () {
     drawGrid(this);
     drawLabels(this);
     drawData(this);
+    //testing here anyway
+    //moveData(this);
     drawTooltips(this);
     drawTextBox(this);
 }
@@ -126,6 +131,20 @@ function loadData(obj, data, lab) {
 }
 
 
+function moveData(obj) {
+    if (obj.mousePointClick) {//assume mousePointIndex is set to NOT null
+        var xOffset = obj.canvas.width / 2;//the x and y offset to make the starting point (0,0) (so it is drawn from the middle)
+        var yOffset = obj.canvas.height / 2;
+        var xUnits = obj.canvas.width / obj.limits.xLen;//these are the pixels per unit on the graph.
+        var yUnits = obj.canvas.height / obj.limits.yLen;
+        //super inneficient to calculate them every call but works for this beta version anyway
+        //console.log(obj.mousePointClick);
+        obj.data[obj.mousePointIndex].x = (obj.mousePoint.x - xOffset) / xUnits;
+        obj.data[obj.mousePointIndex].y = -(obj.mousePoint.y - yOffset) / yUnits;
+    }
+}
+
+
 //mousePosition event makes sure the mouse values aren't affected by the movement of the window and updates the objects mouse coordinates
 function getMouse(event,obj) {//updates mouse x and y
     var rect = obj.canvas.getBoundingClientRect();
@@ -137,6 +156,7 @@ function getMouse(event,obj) {//updates mouse x and y
     //debugged and successfully works 18/12
     //additional functionality added for mouse clicking:
     //console.log(event.buttons);
+    
     if (event.buttons == 1 && obj.mousePointIndex != null) {
         //assuming the user is clicking and holding, and is over a point on the graph:
         var xOffset = obj.canvas.width / 2;//the x and y offset to make the starting point (0,0) (so it is drawn from the middle)
@@ -144,11 +164,38 @@ function getMouse(event,obj) {//updates mouse x and y
         var xUnits = obj.canvas.width / obj.limits.xLen;//these are the pixels per unit on the graph.
         var yUnits = obj.canvas.height / obj.limits.yLen;
         //super inneficient to calculate them every call but works for this beta version anyway
-        obj.data[obj.mousePointIndex].x = (x-xOffset)/xUnits;
-        obj.data[obj.mousePointIndex].y = -(y-yOffset)/yUnits;
+        //console.log(obj.mousePointClick);
+        obj.data[obj.mousePointIndex].x = (x - xOffset) / xUnits;
+        obj.data[obj.mousePointIndex].y = -(y - yOffset) / yUnits;
         //console.log("MOVEMENMT");
-        this.mousePointIndex = null;
+        //this.mousePointClick = null;
     }
+    else {
+        obj.mousePointIndex = null;
+
+    }
+}
+
+
+function getMouseClick(event, obj) {
+    var rect = obj.canvas.getBoundingClientRect();
+    var x = event.clientX - rect.left;
+    var y = event.clientY - rect.top;
+    var xOffset = obj.canvas.width / 2;//the x and y offset to make the starting point (0,0) (so it is drawn from the middle)
+    var yOffset = obj.canvas.height / 2;
+    var xUnits = obj.canvas.width / obj.limits.xLen;//these are the pixels per unit on the graph.
+    var yUnits = obj.canvas.height / obj.limits.yLen;
+    console.log("mousedown");
+    console.log(obj.mousePointIndex);
+    //obj.mousePointClick = new _.point.Point((x - xOffset) / xUnits, -(y - yOffset) / yUnits);
+
+    //.mousePointClick = obj.mousePointIndex;
+    //obj.mousePointClick = true;
+}
+
+function getMouseUp(event, obj) {
+    console.log("mouseup");
+    obj.mousePointIndex = null;
 }
 
 
