@@ -12,15 +12,17 @@ var g = new graph.graph();
 //the first array input is the graph limits on the x axis and the y axis.
 g.load([-10, 10, -10, 10], [[-2, 1], [3, 4], [6, -3], [9, 1]]);
 g.fillArea = false;//shows how to modify some options for different results:
-//g.drawGrid = false; would work if i had a grid draw-able (WIP)
+//g.showGrid = false;
 //g.drawAxis = false;
 //g.showLabels = false;
 //g.drawLines = false;
 
 
 var gf = new graph.graph();
-gf.load([-5, 7, -10, 5], [[-2, 1], [1, 2], [2, -3], [3, 1]]);
+gf.load([-10, 10, -10, 10], [[-10,10],[-9,8],[-8,6],[-7,4],[-6,2],[-5,0],[-4,-2],[-3,-4],[-2,-6],[-1,-4],[0,-2],[1,0],[2,2],[3,4],[4,6],[5,8],[6,10],[7,12],[8,14],[9,16]]);
 gf.newLabel(80, 30, function () { return gf.data[0].x });
+gf.snapToPoints = false;//true or false whether for the mouse changing features to have it snap to specific points or not
+gf.showGrid = false;
 
 
 //after modification 'compile' this to ../complete.js with the command:
