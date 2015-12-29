@@ -34,8 +34,26 @@ function boldPrint (text, x, y, c, ctx) {
     ctx.fillText(text, x, y);
 }
 
+function getXPoint(p,obj) {
+    if (p != undefined && obj != undefined) {
+        //should return a point 
+        //var ix = (p.x * obj.xUnits) + obj.xOffset;
+        return (p * obj.xUnits) + obj.xOffset + ((obj.originPoint.x * obj.xUnits));
+    }
+}
+
+function getYPoint(p,obj) {
+    if (p != undefined && obj != undefined) {
+        //should return a point
+        //var iy = -(p.y * obj.yUnits) + obj.yOffset;
+        return -(p * obj.yUnits) + obj.yOffset + obj.originPoint.y;
+    }
+}
+
 //export:
 module.exports.createCanvas = createCanvas;
 module.exports.loadImage = loadImage;
 module.exports.boldPrint = boldPrint;
+module.exports.getX = getXPoint;
+module.exports.getY = getYPoint;
 //end
