@@ -54,6 +54,4 @@ function getYPoint(p,obj) {
 module.exports.createCanvas = createCanvas;
 module.exports.loadImage = loadImage;
 module.exports.boldPrint = boldPrint;
-module.exports.getX = getXPoint;
-module.exports.getY = getYPoint;
 //end
