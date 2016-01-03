@@ -20,6 +20,7 @@ function FDO(o,c) {
 FDO.prototype.getX = function (i) { return (this.data[i].x + this.origin.x); };//asusming they are both POINT type objects
 FDO.prototype.getY = function (i) { return (this.data[i].y + this.origin.y); };
 FDO.prototype.getP = function (i) { return this.data[i]; };
+FDO.prototype.getData = function () { var x = []; for (var i = 0; i < this.data.length; i++) { x[i] = [this.data[i].x, this.data[i].y]; } return x; }
 
 //add other utility functions:
 

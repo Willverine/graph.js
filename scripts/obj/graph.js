@@ -25,11 +25,11 @@ function graph() {
     this.fillArea = true;
     this.drawLines = true;
     this.snapToPoints = true;
-    this.lineColour = "#0000ff";
+    //this.lineColour = "#0000ff";
     this.fillColour = "rgba(255,150,0,0.4)";
     this.pointColour = "#ff0000";
     
-    this.canvas = _.util.createCanvas(800, 600);
+    this.canvas = _.util.createCanvas(500, 300);
     this.context = this.canvas.getContext("2d");
     this.data = [];//a list of points of x and y values to be drawn. //CHANGING THIS TO A LIST OF LIST OF dataobjects
     this.labels = [];
@@ -40,20 +40,27 @@ function graph() {
     this.delta;
 
     //utility functions:
-    this.getXPoint = function (p) {
+    this.getXPoint = function (p, k) {
         if (p != undefined) {
+            //k is the INDEX of the dataset it is working off; ie: graph.data[k]
             //should return a point 
             //var ix = (p.x * obj.xUnits) + obj.xOffset;
             //return (p * this.xUnits) + this.xOffset + (this.originPoint.x * this.xUnits);
-            return (p * this.xUnits) + this.xOffset + (this.originPoint.x * this.xUnits);
+            //return (p * this.xUnits) + this.xOffset + (this.originPoint.x * this.xUnits);
+            if (k != undefined) {
+                return (p * this.xUnits) + this.xOffset + (this.data[k].origin.x * this.xUnits);
+            }
+            return (p * this.xUnits) + this.xOffset + (this.data[0].origin.x * this.xUnits);
         }
     }
 
-    this.getYPoint = function (p) {
+    this.getYPoint = function (p,k) {
         if (p != undefined) {
+            //K ISN"T USED HERE YET CAUSE IS IT NEEDED??
             //should return a point
             //var iy = -(p.y * obj.yUnits) + obj.yOffset;
-            return (-(p * this.yUnits) + this.yOffset + (-this.originPoint.y * this.yUnits));
+            //return (-(p * this.yUnits) + this.yOffset + (-this.originPoint.y * this.yUnits));
+            return (-(p * this.yUnits) + this.yOffset + (-this.data[0].origin.y * this.yUnits));
         }
     }
 }
@@ -233,8 +240,9 @@ function getMouse(event,obj) {//updates mouse x and y
 
     //test out translating the things around the place
     if (event.which == 2) {
-        obj.originPoint.x += event.movementX;
+        //obj.originPoint.x += event.movementX;
         //obj.originPoint.y -= event.movementY;
+        obj.data[0].origin.x += event.movementX;
     }
 }
 
@@ -340,10 +348,10 @@ function drawTooltips(obj) {
             obj.context.strokeStyle = "#000000";
             obj.context.beginPath();//remove this line if i want to highlight the lines (redrawing them or whatever) when mouse overing
             //obj.context.rect((p.x * obj.xUnits) + obj.xOffset - 15, -(p.y * obj.yUnits) + obj.yOffset - 20, 30, 16);
-            obj.context.rect(obj.getXPoint(p.x) - 15, obj.getYPoint(p.y) - 20, 30, 16);
+            obj.context.rect(obj.getXPoint(p.x,i) - 15, obj.getYPoint(p.y) - 20, 30, 16);
             obj.context.fillStyle = "#000000";
             //obj.context.fillText(p.x + ", " + p.y, (p.x * obj.xUnits) + obj.xOffset, -(p.y * obj.yUnits) + obj.yOffset - 10)
-            obj.context.fillText((p.x + obj.originPoint.x) + ", " + (p.y + obj.originPoint.y), obj.getXPoint(p.x), obj.getYPoint(p.y) - 10);
+            obj.context.fillText((p.x + obj.originPoint.x) + ", " + (p.y + obj.originPoint.y), obj.getXPoint(p.x,i), obj.getYPoint(p.y) - 10);
             //TODO: 
             //check if it is a NEGATIVE y value and if so draw this tooltip thing Below the line instead of above (is neater)
             obj.context.stroke();
@@ -400,7 +408,7 @@ function drawData(obj) {
     //with these: to draw a point, place a dot at 0,1 units it would be drawn on pixels:
     //x = (xOffset + (0 * xUnits);   y = yOffset + (1 * yUnits)
     //which is gained through the function obj.getXPoint(p); or obj.getYPoint(p)
-    
+    var currentLineWidth = obj.context.lineWidth;
     //loop through the data in the obj
     for (var k = 0; k < obj.data.length; k++) {
         var d = obj.data[k];
@@ -410,20 +418,23 @@ function drawData(obj) {
             ctx.beginPath();
             var p = d.getP(0);
             
-            ctx.moveTo(obj.getXPoint(p.x), obj.getYPoint(p.y));
+            ctx.moveTo(obj.getXPoint(p.x,k), obj.getYPoint(p.y));
             //ctx.moveTo((d[0].x * obj.xUnits) + obj.xOffset, 0 + obj.yOffset);//need to start under the line to draw the invisible box thing so we can fill the area in...
-            ctx.strokeStyle = obj.lineColour;
+            //ctx.strokeStyle = obj.lineColour;
+            ctx.strokeStyle = d.colour;
             //ctx.beginPath();
             for (var i = 1; i < d.data.length; i++) {
                 var p = d.getP(i);//point = the item at d's index
-                ctx.lineTo(obj.getXPoint(p.x), obj.getYPoint(p.y));
+                ctx.lineTo(obj.getXPoint(p.x,k), obj.getYPoint(p.y));
             }
+            ctx.lineWidth = 3;
             ctx.stroke();
+            ctx.lineWidth = currentLineWidth;
             //move from the last point of the array to the x axis and complete the shape then fill it if necessary
-            ctx.lineTo(obj.getXPoint(d.getP(d.data.length - 1).x), 0 + obj.yOffset);
+            ctx.lineTo(obj.getXPoint(d.getP(d.data.length - 1).x,k), 0 + obj.yOffset);
             //ctx.lineTo(obj.getXPoint(d[d.length-1].x), obj.getYPoint(0));
             //ctx.lineTo(obj.getXPoint(d[0].x), obj.getYPoint(0));
-            ctx.lineTo(obj.getXPoint(d.getP(0).x), 0 + obj.yOffset);
+            ctx.lineTo(obj.getXPoint(d.getP(0).x,k), 0 + obj.yOffset);
             ctx.closePath();
             if (obj.fillArea) {
                 ctx.fillStyle = obj.fillColour;
@@ -437,11 +448,11 @@ function drawData(obj) {
             //for each data item, draw it to the canvas as a point
             var p = d.getP(i);//point = the item at d's index
             //FOR DOT POINT
-            ctx.fillRect(obj.getXPoint(p.x) - 2, obj.getYPoint(p.y) - 2, 4, 4);//draws a rect at point t,t of size 4,4
+            ctx.fillRect(obj.getXPoint(p.x,k) - 2, obj.getYPoint(p.y) - 2, 4, 4);//draws a rect at point t,t of size 4,4
             //the -2 are just so the point is centered around that position
 
             //check if the mouse point is Near one of these particular points: if so set the mousePointIndex to this i value.
-            var ix = obj.getXPoint(p.x);
+            var ix = obj.getXPoint(p.x,k);
             var iy = obj.getYPoint(p.y);
             if (obj.mousePoint.x > (ix - 8) && obj.mousePoint.x < (ix + 8) && obj.mousePoint.y > (iy - 8) && obj.mousePoint.y < (iy + 8)) {
                 //this means current point is within 16 pixels of a point:
