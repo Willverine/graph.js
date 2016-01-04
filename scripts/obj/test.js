@@ -10,44 +10,46 @@ for (var i = 0; i < 5; i++) {
     mygraphs[i] = new graph.graph();
 }
 
-mygraphs[0].load([-5, 5, -5, 5], [[[-4, 0], [-1, 0], [-1, 3], [2, 3], [2, -3], [5, -3], [5, 0], [7, 0]]]);
+var xTc = [];
+for (var i = 0; i < 9; i++ ) {
+	xTc[i] = [ 1*i, i ];
+}
 
 
+
+mygraphs[0].load([-5, 5, -5, 5], [xTc]);
+//mygraphs[0].data[0].data[0].y = -2;
+mygraphs[0].fillArea = false;
+
+mygraphs[0].newLabel(80, 30, function () { return mygraphs[0].data[0].origin.x });
 
 mygraphs[1].load([-5, 5, -5, 5], [[[-4, 0], [-1, 0], [-1, -3], [2, -3], [2, 3], [5, 3], [5, 0], [7, 0]]]);
 mygraphs[1].data[0].colour = "#00FF00";
-
 
 mygraphs[2].load([-5, 5, -5, 5], [[]]);
 mygraphs[2].data[0] = mygraphs[0].data[0];
 mygraphs[2].data[1] = mygraphs[1].data[0];
 
-
-
 mygraphs[3].load([-5, 5, -5, 5], [[]]);
 mygraphs[3].data = mygraphs[1].data;
-
-
 
 mygraphs[4].load([-5, 5, -5, 5], [mygraphs[3].data[0].getData()]);
 doThings(mygraphs[4]);
 
 mygraphs[4].data[0].colour = "#0000FF";
 
-
 function doThings(inp) {
     //like gets the thing of the data and does magic to it to make convolutions:
     for (var i = 0; i < inp.data[0].data.length; i++) {
-        inp.data[0].data[i].y = 1;
+        inp.data[0].data[i].x = 1;
     }
-    /*
-    for (var i = 0; i < inp.data[1].data.length; i++) {
-        inp.data[1].data[i].y = -1;
-    }
-    */
+	
 }
 
-
+var theDatas = mygraphs[0].data[0].data;
+for (var i = 0; i < theDatas.length; i++) {
+	theDatas[i].y = -2;
+}
 /*
 //delete this later
 var g = new graph.graph();

@@ -239,7 +239,7 @@ function getMouse(event,obj) {//updates mouse x and y
 
 
     //test out translating the things around the place
-    if (event.which == 2) {
+    if (event.which == 3) {
         //obj.originPoint.x += event.movementX;
         //obj.originPoint.y -= event.movementY;
         obj.data[0].origin.x += event.movementX;
