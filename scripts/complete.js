@@ -254,10 +254,10 @@ function getMouse(event,obj) {//updates mouse x and y
             var xUnits = obj.canvas.width / obj.limits.xLen;//these are the pixels per unit on the graph.
             var yUnits = obj.canvas.height / obj.limits.yLen;
             */
-            //super inneficient to calculate them every call but works for this beta version anyway
+            //super inefficient to calculate them every call but works for this beta version anyway
             //console.log(obj.mousePointClick);
             if (obj.snapToPoints) {//will snap to rounded points
-                obj.data[i].getP(obj.data[i].mousePointIndex).x = Math.round((x - obj.xOffset - (obj.originPoint.x * obj.xUnits)) / obj.xUnits);
+                obj.data[i].getP(obj.data[i].mousePointIndex).x = Math.round((x - obj.xOffset - (obj.data[i].origin.x * obj.xUnits)) / obj.xUnits);
                 obj.data[i].getP(obj.data[i].mousePointIndex).y = Math.round(-(y - obj.yOffset - (-obj.originPoint.y * obj.yUnits)) / obj.yUnits);
             } else {
                 obj.data[i].getP(obj.data[i].mousePointIndex).x = (x - obj.xOffset - (obj.originPoint.x * obj.xUnits)) / obj.xUnits;
@@ -310,6 +310,12 @@ function getMouseUp(event, obj) {
 function dataUpdate(obj) {
     //obj.data = [];
     //this function probably isn't necessary as all variables are publically accessible so can modify them directly and they will be updated.
+	
+	//this function is NOW necessary for applying transformations to data. 
+	//give a datasetobject a modifier function (and original data function)
+	//during update HERE run that function over its original dataset again (to its normal dataset).
+	//should check for changes somehow; maybe through some flag or something.
+	
 }
 
 
