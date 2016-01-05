@@ -14,6 +14,8 @@ var point = require("./point.js");
 function FDO(o,c) {
     this.origin = o;
     this.data = [];
+    this.altdata = null;
+    this.method = null;
     this.colour = c;
     this.mousePointIndex = null;
 }
@@ -315,7 +317,17 @@ function dataUpdate(obj) {
 	//give a datasetobject a modifier function (and original data function)
 	//during update HERE run that function over its original dataset again (to its normal dataset).
 	//should check for changes somehow; maybe through some flag or something.
-	
+    //
+    //console.log(obj.data[0].altdata);
+    if (obj.data[0].altdata != null && obj.data[0].method != null) {
+        //so for this dataset, it has an alternative dataset and a method attached.
+        //what should happen is the altdata should be run through the method function and produce the actual data.
+        //the method should take the dataset to read from, and the dataset to write to.
+        //(the data set in this case is the obj.data[0].data / .altdata
+        obj.data[0].method();
+        //console.log("update");
+    }
+
 }
 
 
@@ -649,10 +661,23 @@ mygraphs[3].load([-5, 5, -5, 5], [[]]);
 mygraphs[3].data = mygraphs[1].data;
 
 mygraphs[4].load([-5, 5, -5, 5], [mygraphs[3].data[0].getData()]);
-doThings(mygraphs[4]);
+
+//need to give the dataset an ALTDATA set (pointing to the data we want to read off)
+//and a METHOD to transform the data from the given altdata 
+
+mygraphs[4].data[0].altdata = mygraphs[3].data[0].data;
+
+mygraphs[4].data[0].method = function () {
+    //this function here COPIES graph[3]'s dataset but translates it by 1 along the x and by 2 along the y. 
+    for (var i = 0; i < this.data.length; i++) {
+        this.data[i].x = this.altdata[i].x + 1;
+        this.data[i].y = this.altdata[i].y + 2;
+    }
+    this.mousePointIndex = mygraphs[3].data[0].mousePointIndex;
+};
 
 mygraphs[4].data[0].colour = "#0000FF";
-
+/*
 function doThings(inp) {
     //like gets the thing of the data and does magic to it to make convolutions:
     for (var i = 0; i < inp.data[0].data.length; i++) {
@@ -665,6 +690,9 @@ var theDatas = mygraphs[0].data[0].data;
 for (var i = 0; i < theDatas.length; i++) {
 	theDatas[i].y = -2;
 }
+*/
+
+
 /*
 //delete this later
 var g = new graph.graph();

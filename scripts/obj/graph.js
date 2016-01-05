@@ -282,7 +282,13 @@ function dataUpdate(obj) {
 	//give a datasetobject a modifier function (and original data function)
 	//during update HERE run that function over its original dataset again (to its normal dataset).
 	//should check for changes somehow; maybe through some flag or something.
-	
+    //console.log(obj.data[0].altdata);
+    if (obj.data[0].altdata != null && obj.data[0].method != null) {
+        //so for this dataset, it has an alternative dataset and a method attached.
+        //what should happen is the altdata should be run through the method function and produce the actual data.
+        obj.data[0].method();
+    }
+
 }
 
 

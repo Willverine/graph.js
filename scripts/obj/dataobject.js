@@ -13,6 +13,8 @@ var point = require("./point.js");
 function FDO(o,c) {
     this.origin = o;
     this.data = [];
+    this.altdata = null;
+    this.method = null;
     this.colour = c;
     this.mousePointIndex = null;
 }
