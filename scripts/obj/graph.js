@@ -4,6 +4,7 @@ Create this object, feed the data and provide sizes, etc; and see it drawn and w
 This takes advantage of browserify.js to compile the multiple files into one complete.js
 Open source license; anyone can use and reuse as long as credit is given to this original.
 @author William Owers 03/12/2016
+
 */
 
 //REQUIREMENTS used with browserify stuff.
@@ -25,16 +26,15 @@ function graph() {
     this.fillArea = true;
     this.drawLines = true;
     this.snapToPoints = true;
-    //this.lineColour = "#0000ff";
     this.fillColour = "rgba(255,150,0,0.4)";
     this.pointColour = "#ff0000";
     
     this.canvas = _.util.createCanvas(500, 300);
     this.context = this.canvas.getContext("2d");
-    this.data = [];//a list of points of x and y values to be drawn. //CHANGING THIS TO A LIST OF LIST OF dataobjects
+    this.data = [];//a list of points of x and y values to be drawn sotred in an FDO
     this.labels = [];
 
-    //maybe timing events need to be local?
+    //Timing events are local to a graph.
     this.now;
     this.then = Date.now();
     this.delta;
@@ -43,10 +43,6 @@ function graph() {
     this.getXPoint = function (p, k) {
         if (p != undefined) {
             //k is the INDEX of the dataset it is working off; ie: graph.data[k]
-            //should return a point 
-            //var ix = (p.x * obj.xUnits) + obj.xOffset;
-            //return (p * this.xUnits) + this.xOffset + (this.originPoint.x * this.xUnits);
-            //return (p * this.xUnits) + this.xOffset + (this.originPoint.x * this.xUnits);
             if (k != undefined) {
                 return (p * this.xUnits) + this.xOffset + (this.data[k].origin.x * this.xUnits);
             }
@@ -56,10 +52,7 @@ function graph() {
 
     this.getYPoint = function (p,k) {
         if (p != undefined) {
-            //K ISN"T USED HERE YET CAUSE IS IT NEEDED??
-            //should return a point
-            //var iy = -(p.y * obj.yUnits) + obj.yOffset;
-            //return (-(p * this.yUnits) + this.yOffset + (-this.originPoint.y * this.yUnits));
+            //same above
             if (k != undefined) {
                 return (p * this.yUnits) + this.yOffset + (this.data[k].origin.y * this.yUnits);
             }
@@ -89,10 +82,7 @@ graph.prototype.load = function (limits, data) {
 }
 
 graph.prototype.update = function () {
-    //getMouse(this);
-    
     dataUpdate(this);
-    //this.mousePointIndex = null;
 }
 
 graph.prototype.draw = function () {
@@ -100,14 +90,12 @@ graph.prototype.draw = function () {
     drawGrid(this);
     drawLabels(this);
     drawData(this);
-    //testing here anyway
-    //moveData(this);
     drawTooltips(this);
     drawTextBox(this);
 }
 
 graph.prototype.newLabel = function (x,y,text) {
-    //this functino should produce a label with given inputs x,y,and text. (or like text item)
+    //this function should produce a label with given inputs x,y,and text. (or like text item)
     this.labels.push(new _.label.Label(x, y, text));
 }
 
@@ -116,15 +104,11 @@ graph.prototype.newLabel = function (x,y,text) {
 //UPDATE TIMING ITEMS ARE NOW LOCAL TO THE OBJECT
 //functions used by the graph object:
 //draws at the FPS rate (taking into account the overhead from other functions)
-//this is the FPS control and other drawing shit that can kinda be pushed to the side for now.
-//Essentially it creates the update/draw looping on that objects canvas at that set FPS rate.
+//creates the update/draw looping on that objects canvas at that set FPS rate.
 //This means any updates to data or mouse or anything placed in the objects update state will automatically show. 
 //It can also be interrupted/paused so that it will only update on events for example (if performance becomes an issue)
 var fps = 30;//controls the number of times a second this is refreshed; high for lower performance but smoother operation
-var now;
-var then = Date.now();//current time
 var interval = 1000 / fps;//interval time
-var delta;//delta time
 function initDrawLoop(obj) {
     requestAnimationFrame(function () { initDrawLoop(obj); });//requests the browser to draw a frame before the next repaint.
     obj.now = Date.now();
@@ -134,10 +118,7 @@ function initDrawLoop(obj) {
         obj.context.clearRect(0, 0, obj.canvas.width, obj.canvas.height);//wipe the display
         //---------- add the actual content to be drawn:
         obj.draw();
-
-        //call update
         obj.update();
-
     }
 }
 
@@ -147,7 +128,6 @@ function initDrawLoop(obj) {
 //takes a reference to the object being modified and the limits of the graph. 
 function initialiseAxis(obj, lims) {
     //lims to be an array 4 items long corresponding to the xLeft, xRight, yTop, yBottom values
-    //modify the obj.limits if necessary
     obj.limits.xLeft = lims[0];
     obj.limits.xRight = lims[1];
     obj.limits.yTop = lims[3];
@@ -159,22 +139,12 @@ function initialiseAxis(obj, lims) {
 
 //takes data and feeds it into the objects data list;
 function loadData(obj, data, lab) {
-    /*
     //data should be a lsit of Points to be drawn. (Coordinates of the graph)
     //obj.data = data;
     //obj.labels.push(lab);//adds the label to the list of labels DO LATER? MAYBE NOT NECESSARY
     //this Should actually take a normal array and convert it to the point type. 
     //so like input of data like [[1,0],[2,3],[5,2],etc];
-    for (var j = 0; j < data.length; j++) {
-        //for each list in DATA do the following:
-        for (var i = 0; i < data[j].length; i++) {
-            obj.data.push(new _.point.Point(data[j][i][0], data[j][i][1]));
-            //should be pushing each x and y of each data array of each data list
-        }
-    }
-    */
     //so like input of data like [ [[1,0],[2,3],[5,2]], [[x,y],[x,y],[x,y]], etc ];
-    //making a new delcaration to cater for support of the FDO:
     var colourTable = ["#FF0000", "#00FF00", "#0000FF"];
     for (var i = 0; i < data.length; i++) {
         var TempD = new _.FDO.FDO(new _.point.Point(0, 0), colourTable[i]);//FDO is the data object, initialises the point(0,0) for the origin to draw off
@@ -186,25 +156,6 @@ function loadData(obj, data, lab) {
 }
 
 
-function moveData(obj) {//can probably depricate this
-    if (obj.mousePointClick) {//assume mousePointIndex is set to NOT null
-        /*
-        var xOffset = obj.canvas.width / 2;//the x and y offset to make the starting point (0,0) (so it is drawn from the middle)
-        var yOffset = obj.canvas.height / 2;
-        var xUnits = obj.canvas.width / obj.limits.xLen;//these are the pixels per unit on the graph.
-        var yUnits = obj.canvas.height / obj.limits.yLen;
-        */
-        //super inneficient to calculate them every call but works for this beta version anyway
-        //console.log(obj.mousePointClick);
-
-        //obj.data[0].getX(obj.mousePointIndex) = (obj.mousePoint.x - obj.xOffset) / obj.xUnits;
-        //obj.data[0].getY(obj.mousePointIndex) = -(obj.mousePoint.y - obj.yOffset) / obj.yUnits;
-        //LIMITATIONS HERE: mouse movement only effects the FIRST DATASET of each graph CURRENTLY
-        //simply need to add a loop so each can be modified. 
-    }
-}
-
-
 //mousePosition event makes sure the mouse values aren't affected by the movement of the window and updates the objects mouse coordinates
 function getMouse(event,obj) {//updates mouse x and y
     var rect = obj.canvas.getBoundingClientRect();
@@ -212,21 +163,10 @@ function getMouse(event,obj) {//updates mouse x and y
     var y = event.clientY - rect.top;
     obj.mousePoint.x = x;
     obj.mousePoint.y = y;
-    //console.log(event.which);
-    //additional functionality added for LEFT mouse clicking:
-
-    //loop through each data object thang
+    //loop through each data object
     for (var i = 0; i < obj.data.length; i++) {
         if (event.which == 1 && obj.data[i].mousePointIndex != null) {
             //assuming the user is clicking and holding, and is over a point on the graph:
-            /*
-            var xOffset = obj.canvas.width / 2;//the x and y offset to make the starting point (0,0) (so it is drawn from the middle)
-            var yOffset = obj.canvas.height / 2;
-            var xUnits = obj.canvas.width / obj.limits.xLen;//these are the pixels per unit on the graph.
-            var yUnits = obj.canvas.height / obj.limits.yLen;
-            */
-            //inefficient to calculate them every call but works for this beta version anyway
-            //console.log(obj.mousePointClick);
             if (obj.snapToPoints) {//will snap to rounded points
                 obj.data[i].getP(obj.data[i].mousePointIndex).x = Math.round((x - obj.xOffset - (obj.data[i].origin.x * obj.xUnits)) / obj.xUnits);
                 obj.data[i].getP(obj.data[i].mousePointIndex).y = Math.round(-(y - obj.yOffset - (-obj.originPoint.y * obj.yUnits)) / obj.yUnits);
@@ -234,19 +174,12 @@ function getMouse(event,obj) {//updates mouse x and y
                 obj.data[i].getP(obj.data[i].mousePointIndex).x = (x - obj.xOffset - (obj.data[i].origin.x * obj.xUnits)) / obj.xUnits;
                 obj.data[i].getP(obj.data[i].mousePointIndex).y = -(y - obj.yOffset - (-obj.originPoint.y * obj.yUnits)) / obj.yUnits;
             }
-
         } else {
             obj.data[i].mousePointIndex = null;
         }
     }
-
-
-    //test out translating the things around the place
+    //TRANSLATION
     if (event.which == 3) {
-        //console.log(event);
-        
-        //obj.originPoint.x += event.movementX;
-        //obj.originPoint.y -= event.movementY;
         if (obj.snapToPoints) {
             if (event.movementX < 2) {
                 obj.data[0].origin.x += Math.round(event.movementX);
@@ -263,33 +196,16 @@ function getMouseClick(event, obj) {//can this be depricated
     var rect = obj.canvas.getBoundingClientRect();
     var x = event.clientX - rect.left;
     var y = event.clientY - rect.top;
-    /*
-    var xOffset = obj.canvas.width / 2;//the x and y offset to make the starting point (0,0) (so it is drawn from the middle)
-    var yOffset = obj.canvas.height / 2;
-    var xUnits = obj.canvas.width / obj.limits.xLen;//these are the pixels per unit on the graph.
-    var yUnits = obj.canvas.height / obj.limits.yLen;
-    */
-    //console.log("mousedown");
-    //console.log(obj.mousePointIndex);
-    //obj.mousePointClick = new _.point.Point((x - xOffset) / xUnits, -(y - yOffset) / yUnits);
-
-    //.mousePointClick = obj.mousePointIndex;
-    //obj.mousePointClick = true;
 }
 
 function getMouseUp(event, obj) {
-    //console.log("mouseup");
     for (var i = 0; i < obj.data.length; i++) {
-        obj.data[i].mousePointIndex = null;
+        obj.data[i].mousePointIndex = null;//reset all mousePointIndex's
     }
 }
 
 
-//function moves data along or updates the origin point for movement or whatever
 function dataUpdate(obj) {
-    //obj.data = [];
-    //this function probably isn't necessary as all variables are publically accessible so can modify them directly and they will be updated.
-	
 	//this function is NOW necessary for applying transformations to data. 
 	//give a datasetobject a modifier function (and original data function)
 	//during update HERE run that function over its original dataset again (to its normal dataset).
@@ -305,19 +221,14 @@ function dataUpdate(obj) {
 
 
 //draw the axis on the canvas. 
-//CHECK FIRST should be irrespective of the objects origin point; this is so the function can be moved.
-//this is just the Lines on the canvas not the graph values itself. (?) maybe it should be drawn from origin too......
 //CURRENTLY this will not be drawn off the origin points; this is so the function itself can be translated along the graph; rather than moving the graph around.
 function drawAxis(obj) {
     if (obj.drawAxis) {
-        //var top = obj.canvas.width / 2;//use xOffset
-        //var left = obj.canvas.height / 2;//use yOffset
         var ctx = obj.context;
         ctx.strokeStyle = "#000000";
         ctx.beginPath();
         ctx.moveTo(obj.xOffset, 0);
         ctx.lineTo(obj.xOffset, obj.canvas.height);
-        //ctx.stroke();
         ctx.moveTo(0, obj.yOffset);
         ctx.lineTo(obj.canvas.width, obj.yOffset);
         ctx.stroke();
@@ -332,40 +243,21 @@ function drawGrid(obj) {
         var ctx = obj.context;
         ctx.fillStyle = "rgba(80,80,80,0.4)";
         //now need to loop through the units we need to print items for:
-        //on the x axis we want vertical 'ticks' and on the y axis we want horizontal 'ticks' say 9 pixels long (?)
         for (var i = obj.limits.xLeft; i < obj.limits.xRight; i++) {
             //loops through each unit on the x axis
-            //fill a rect (1 pix thin so a line) just above the point on the line till just below it
-            //fillRect xPoint, y + 4, 1, 9)
-            ctx.fillRect((obj.xUnits * i) + obj.xOffset, 0, 1, obj.canvas.height);//negative - value so it is the right side of the axis
-            //ctx.fillRect(_.util.getX(i, obj), 0, 1, obj.canvas.height);
+            ctx.fillRect((obj.xUnits * i) + obj.xOffset, 0, 1, obj.canvas.height);
         }
         //now same for yAxis
         for (var i = obj.limits.yBottom; i < obj.limits.yTop; i++) {
             //loops through each unit on the y axis
-            //fill a rect (1 pix thin so a line) just left of the point on the line till just right of it
-            //fillRect( xOffset - 4, (yUnits * i) + yOffset, 9, 1)
-            ctx.fillRect(0, (obj.yUnits * i) + obj.yOffset, obj.canvas.width, 1);//negative - value so it is the right side of the axis
-            //ctx.fillRect(0, _.util.getY(i, obj), obj.canvas.width, 1);
+            ctx.fillRect(0, (obj.yUnits * i) + obj.yOffset, obj.canvas.width, 1);
         }
     }
-
-
-    
 }
 
 
-//draw the tooltips like if mosue is over a point print its value. or the T value, whatever. 
+//draw the tooltips like if mosue is over a point print its given text value.
 function drawTooltips(obj) {
-    //do laters only if mouse is over a point or whatever
-    //if obj.mousePointIndex not equal to null then the mouse is over that index at that point so draw the thing:
-    //console.log(obj.mousePointIndex);
-    /*
-    var xOffset = obj.canvas.width / 2;//the x and y offset to make the starting point (0,0) (so it is drawn from the middle)
-    var yOffset = obj.canvas.height / 2;
-    var xUnits = obj.canvas.width / obj.limits.xLen;//these are the pixels per unit on the graph.
-    var yUnits = obj.canvas.height / obj.limits.yLen;
-    */
     for (var i = 0; i < obj.data.length; i++) {
         if (obj.data[i].mousePointIndex != null) {
             var p = obj.data[i].getP(obj.data[i].mousePointIndex);
@@ -373,10 +265,8 @@ function drawTooltips(obj) {
             var pY = Math.round(obj.data[i].getY(obj.data[i].mousePointIndex));
             obj.context.strokeStyle = "#000000";
             obj.context.beginPath();//remove this line if i want to highlight the lines (redrawing them or whatever) when mouse overing
-            //obj.context.rect((p.x * obj.xUnits) + obj.xOffset - 15, -(p.y * obj.yUnits) + obj.yOffset - 20, 30, 16);
             obj.context.rect(obj.getXPoint(p.x,i) - 15, obj.getYPoint(p.y) - 20, 30, 16);
             obj.context.fillStyle = "#000000";
-            //obj.context.fillText(p.x + ", " + p.y, (p.x * obj.xUnits) + obj.xOffset, -(p.y * obj.yUnits) + obj.yOffset - 10)
             obj.context.fillText((pX + obj.originPoint.x) + ", " + (pY + obj.originPoint.y), obj.getXPoint(p.x,i), obj.getYPoint(p.y) - 10);
             //TODO: 
             //check if it is a NEGATIVE y value and if so draw this tooltip thing Below the line instead of above (is neater)
@@ -387,15 +277,7 @@ function drawTooltips(obj) {
 
 
 function drawLabels(obj) {
-    //this function should draw the labels on the axises and whatnot
-    //first init some like measurements like number of points (one per unit) and whatnot
     if (obj.drawAxis) {
-        /*
-        var xOffset = obj.canvas.width / 2;//the x and y offset to make the starting point (0,0) (so it is drawn from the middle)
-        var yOffset = obj.canvas.height / 2;
-        var xUnits = obj.canvas.width / obj.limits.xLen;//these are the pixels per unit on the graph.
-        var yUnits = obj.canvas.height / obj.limits.yLen;
-        */
         var ctx = obj.context;
         ctx.fillStyle = "#000000";
         //now need to loop through the units we need to print items for:
@@ -403,32 +285,20 @@ function drawLabels(obj) {
         for (var i = obj.limits.xLeft; i < obj.limits.xRight; i++) {
             //loops through each unit on the x axis
             //fill a rect (1 pix thin so a line) just above the point on the line till just below it
-            //fillRect xPoint, y + 4, 1, 9)
             ctx.fillRect((obj.xUnits * i) + obj.xOffset, -4 + obj.yOffset, 1, 9);//negative - value so it is the right side of the axis
             ctx.fillText(i, (obj.xUnits * i) + obj.xOffset, 15 + obj.yOffset);
-            
         }
         //now same for yAxis
         for (var i = obj.limits.yBottom; i < obj.limits.yTop; i++) {
             //loops through each unit on the y axis
-            //fill a rect (1 pix thin so a line) just left of the point on the line till just right of it
-            //fillRect( xOffset - 4, (yUnits * i) + yOffset, 9, 1)
-            ctx.fillRect(obj.xOffset - 4, (obj.yUnits * i) + obj.yOffset, 9, 1);//negative - value so it is the right side of the axis
+            ctx.fillRect(obj.xOffset - 4, (obj.yUnits * i) + obj.yOffset, 9, 1);
             ctx.fillText(-i, obj.xOffset + 15, (obj.yUnits * i) + obj.yOffset + 4);
         }
     }
 }
 
 
-
-//draw the data points on the thing
 function drawData(obj) {
-    /*
-    var xOffset = obj.canvas.width/2;//the x and y offset to make the starting point (0,0) (so it is drawn from the middle)
-    var yOffset = obj.canvas.height/2;
-    var xUnits = obj.canvas.width / obj.limits.xLen;//these are the pixels per unit on the graph.
-    var yUnits = obj.canvas.height / obj.limits.yLen;
-    */
     var ctx = obj.context;
     var numMPI = 0;//this is just to test for overlapping points
     //with these: to draw a point, place a dot at 0,1 units it would be drawn on pixels:
@@ -438,17 +308,12 @@ function drawData(obj) {
     //loop through the data in the obj
     for (var k = 0; k < obj.data.length; k++) {
         var d = obj.data[k];
-        
         if (obj.drawLines) {
             //FOR LINES: this assumes left most point on the graph is hte first in the array, and right most point is the last in the array
             ctx.beginPath();
             var p = d.getP(0);
-            
             ctx.moveTo(obj.getXPoint(p.x,k), obj.getYPoint(p.y));
-            //ctx.moveTo((d[0].x * obj.xUnits) + obj.xOffset, 0 + obj.yOffset);//need to start under the line to draw the invisible box thing so we can fill the area in...
-            //ctx.strokeStyle = obj.lineColour;
             ctx.strokeStyle = d.colour;
-            //ctx.beginPath();
             for (var i = 1; i < d.data.length; i++) {
                 var p = d.getP(i);//point = the item at d's index
                 ctx.lineTo(obj.getXPoint(p.x,k), obj.getYPoint(p.y));
@@ -458,8 +323,6 @@ function drawData(obj) {
             ctx.lineWidth = currentLineWidth;
             //move from the last point of the array to the x axis and complete the shape then fill it if necessary
             ctx.lineTo(obj.getXPoint(d.getP(d.data.length - 1).x,k), 0 + obj.yOffset);
-            //ctx.lineTo(obj.getXPoint(d[d.length-1].x), obj.getYPoint(0));
-            //ctx.lineTo(obj.getXPoint(d[0].x), obj.getYPoint(0));
             ctx.lineTo(obj.getXPoint(d.getP(0).x,k), 0 + obj.yOffset);
             ctx.closePath();
             if (obj.fillArea) {
@@ -469,14 +332,11 @@ function drawData(obj) {
         }
         //then draw the Points themselves (This is done after shading so they are therefore drawn above the shaded area)
         ctx.fillStyle = obj.pointColour;
-        
         for (var i = 0; i < d.data.length; i++) {
             //for each data item, draw it to the canvas as a point
             var p = d.getP(i);//point = the item at d's index
             //FOR DOT POINT
             ctx.fillRect(obj.getXPoint(p.x,k) - 2, obj.getYPoint(p.y) - 2, 4, 4);//draws a rect at point t,t of size 4,4
-            //the -2 are just so the point is centered around that position
-
             //check if the mouse point is Near one of these particular points: if so set the mousePointIndex to this i value.
             var ix = obj.getXPoint(p.x,k);
             var iy = obj.getYPoint(p.y);
@@ -486,14 +346,9 @@ function drawData(obj) {
                     obj.data[k].mousePointIndex = i;
                     numMPI++;
                 }
-                
             }
-
         }
     }
-
-    
-    //obj.data[0].x += 0.01;
 }
 
 
@@ -501,17 +356,10 @@ function drawTextBox(obj) {
     //should draw each label in the labels list
     if (obj.labels.length > 0) {
         for (var i = 0; i < obj.labels.length; i++) {
-            //obj.context.rect(obj.labels[i].point.x, obj.labels[i].point.y, 20, 30);
             obj.context.fillStyle = "#000000";
             obj.context.fillText(obj.labels[i].text(), obj.labels[i].point.x, obj.labels[i].point.y);
-            
-            //obj.context.rect(obj.labels[i].point.x, obj.labels[i].point.y, 20, 20);
-            //obj.context.stroke();
         }
     }
-    
 }
-
-
 
 module.exports.graph = graph;
