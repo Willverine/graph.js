@@ -21,7 +21,7 @@ mygraphs[0].load([-5, 5, -5, 5], [xTc]);
 //mygraphs[0].data[0].data[0].y = -2;
 mygraphs[0].fillArea = false;
 
-mygraphs[0].newLabel(80, 30, function () { return mygraphs[0].data[0].origin.x });
+mygraphs[0].newLabel(80, 30, function () { return Math.round(mygraphs[0].data[0].origin.x) });
 
 mygraphs[1].load([-5, 5, -5, 5], [[[-4, 0], [-1, 0], [-1, -3], [2, -3], [2, 3], [5, 3], [5, 0], [7, 0]]]);
 mygraphs[1].data[0].colour = "#00FF00";
