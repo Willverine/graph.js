@@ -38,13 +38,13 @@ mygraphs[4].load([-5, 5, -5, 5], [mygraphs[3].data[0].getData()]);
 //need to give the dataset an ALTDATA set (pointing to the data we want to read off)
 //and a METHOD to transform the data from the given altdata 
 
-mygraphs[4].data[0].altdata = mygraphs[3].data[0].data;
+mygraphs[4].data[0].altdata = mygraphs[3].data[0];
 
 mygraphs[4].data[0].method = function () {
     //this function here COPIES graph[3]'s dataset but translates it by 1 along the x and by 2 along the y. 
     for (var i = 0; i < this.data.length; i++) {
-        this.data[i].x = this.altdata[i].x + 1;
-        this.data[i].y = this.altdata[i].y + 2;
+        this.data[i].x = this.altdata.getX(i) + 1;
+        this.data[i].y = this.altdata.getY(i) + 2;
     }
     this.mousePointIndex = mygraphs[3].data[0].mousePointIndex;
 };

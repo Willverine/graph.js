@@ -9,6 +9,9 @@ function createCanvas(width, height) {
     canvas.height = height;
     canvas.style.border = "1px solid black";
     document.body.appendChild(canvas);
+    canvas.oncontextmenu = function (e) {
+        e.preventDefault();
+    };
     return canvas;
 }
 

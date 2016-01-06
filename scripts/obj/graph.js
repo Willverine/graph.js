@@ -60,6 +60,10 @@ function graph() {
             //should return a point
             //var iy = -(p.y * obj.yUnits) + obj.yOffset;
             //return (-(p * this.yUnits) + this.yOffset + (-this.originPoint.y * this.yUnits));
+            if (k != undefined) {
+                return (p * this.yUnits) + this.yOffset + (this.data[k].origin.y * this.yUnits);
+            }
+
             return (-(p * this.yUnits) + this.yOffset + (-this.data[0].origin.y * this.yUnits));
         }
     }
@@ -221,18 +225,17 @@ function getMouse(event,obj) {//updates mouse x and y
             var xUnits = obj.canvas.width / obj.limits.xLen;//these are the pixels per unit on the graph.
             var yUnits = obj.canvas.height / obj.limits.yLen;
             */
-            //super inefficient to calculate them every call but works for this beta version anyway
+            //inefficient to calculate them every call but works for this beta version anyway
             //console.log(obj.mousePointClick);
             if (obj.snapToPoints) {//will snap to rounded points
                 obj.data[i].getP(obj.data[i].mousePointIndex).x = Math.round((x - obj.xOffset - (obj.data[i].origin.x * obj.xUnits)) / obj.xUnits);
                 obj.data[i].getP(obj.data[i].mousePointIndex).y = Math.round(-(y - obj.yOffset - (-obj.originPoint.y * obj.yUnits)) / obj.yUnits);
             } else {
-                obj.data[i].getP(obj.data[i].mousePointIndex).x = (x - obj.xOffset - (obj.originPoint.x * obj.xUnits)) / obj.xUnits;
+                obj.data[i].getP(obj.data[i].mousePointIndex).x = (x - obj.xOffset - (obj.data[i].origin.x * obj.xUnits)) / obj.xUnits;
                 obj.data[i].getP(obj.data[i].mousePointIndex).y = -(y - obj.yOffset - (-obj.originPoint.y * obj.yUnits)) / obj.yUnits;
             }
 
         } else {
-            //this seems a bit hacky but it acutally does hte job perfectly?
             obj.data[i].mousePointIndex = null;
         }
     }
@@ -240,9 +243,18 @@ function getMouse(event,obj) {//updates mouse x and y
 
     //test out translating the things around the place
     if (event.which == 3) {
+        //console.log(event);
+        
         //obj.originPoint.x += event.movementX;
         //obj.originPoint.y -= event.movementY;
-        obj.data[0].origin.x += event.movementX;
+        if (obj.snapToPoints) {
+            if (event.movementX < 2) {
+                obj.data[0].origin.x += Math.round(event.movementX);
+            }
+        } else {
+            obj.data[0].origin.x += event.movementX / 10;
+
+        }
     }
 }
 
@@ -357,13 +369,15 @@ function drawTooltips(obj) {
     for (var i = 0; i < obj.data.length; i++) {
         if (obj.data[i].mousePointIndex != null) {
             var p = obj.data[i].getP(obj.data[i].mousePointIndex);
+            var pX = Math.round(obj.data[i].getX(obj.data[i].mousePointIndex)*10)/10;
+            var pY = Math.round(obj.data[i].getY(obj.data[i].mousePointIndex));
             obj.context.strokeStyle = "#000000";
             obj.context.beginPath();//remove this line if i want to highlight the lines (redrawing them or whatever) when mouse overing
             //obj.context.rect((p.x * obj.xUnits) + obj.xOffset - 15, -(p.y * obj.yUnits) + obj.yOffset - 20, 30, 16);
             obj.context.rect(obj.getXPoint(p.x,i) - 15, obj.getYPoint(p.y) - 20, 30, 16);
             obj.context.fillStyle = "#000000";
             //obj.context.fillText(p.x + ", " + p.y, (p.x * obj.xUnits) + obj.xOffset, -(p.y * obj.yUnits) + obj.yOffset - 10)
-            obj.context.fillText((p.x + obj.originPoint.x) + ", " + (p.y + obj.originPoint.y), obj.getXPoint(p.x,i), obj.getYPoint(p.y) - 10);
+            obj.context.fillText((pX + obj.originPoint.x) + ", " + (pY + obj.originPoint.y), obj.getXPoint(p.x,i), obj.getYPoint(p.y) - 10);
             //TODO: 
             //check if it is a NEGATIVE y value and if so draw this tooltip thing Below the line instead of above (is neater)
             obj.context.stroke();
