@@ -23,6 +23,8 @@ function graph() {
     this.showGrid = true;//draw a grid (or not)
     this.drawAxis = true;//draw the axis (or not)
     this.showLabels = true;//whether to put labels on the graph
+    this.showGridLabels = true;
+    this.showPoints = true;
     this.fillArea = true;
     this.drawLines = true;
     this.snapToPoints = true;
@@ -46,7 +48,7 @@ function graph() {
             if (k != undefined) {
                 return (p * this.xUnits) + this.xOffset + (this.data[k].origin.x * this.xUnits);
             }
-            return (p * this.xUnits) + this.xOffset + (this.data[0].origin.x * this.xUnits);
+            return (p * this.xUnits) + this.xOffset + (this.data[0].origin.x * this.xUnits);//negatives?
         }
     }
 
@@ -181,7 +183,7 @@ function getMouse(event,obj) {//updates mouse x and y
     //TRANSLATION
     if (event.which == 3) {
         if (obj.snapToPoints) {
-            if (event.movementX < 2) {
+            if (event.movementX < 2 && event.movementX > -2) {
                 obj.data[0].origin.x += Math.round(event.movementX);
             }
         } else {
@@ -277,7 +279,7 @@ function drawTooltips(obj) {
 
 
 function drawLabels(obj) {
-    if (obj.drawAxis) {
+    if (obj.drawAxis && obj.showGridLabels) {
         var ctx = obj.context;
         ctx.fillStyle = "#000000";
         //now need to loop through the units we need to print items for:
@@ -331,23 +333,26 @@ function drawData(obj) {
             }
         }
         //then draw the Points themselves (This is done after shading so they are therefore drawn above the shaded area)
-        ctx.fillStyle = obj.pointColour;
-        for (var i = 0; i < d.data.length; i++) {
-            //for each data item, draw it to the canvas as a point
-            var p = d.getP(i);//point = the item at d's index
-            //FOR DOT POINT
-            ctx.fillRect(obj.getXPoint(p.x,k) - 2, obj.getYPoint(p.y) - 2, 4, 4);//draws a rect at point t,t of size 4,4
-            //check if the mouse point is Near one of these particular points: if so set the mousePointIndex to this i value.
-            var ix = obj.getXPoint(p.x,k);
-            var iy = obj.getYPoint(p.y);
-            if (obj.mousePoint.x > (ix - 8) && obj.mousePoint.x < (ix + 8) && obj.mousePoint.y > (iy - 8) && obj.mousePoint.y < (iy + 8)) {
-                //this means current point is within 16 pixels of a point:
-                if (numMPI <= 0) {
-                    obj.data[k].mousePointIndex = i;
-                    numMPI++;
+        if (obj.showPoints) {
+            ctx.fillStyle = obj.pointColour;
+            for (var i = 0; i < d.data.length; i++) {
+                //for each data item, draw it to the canvas as a point
+                var p = d.getP(i);//point = the item at d's index
+                //FOR DOT POINT
+                ctx.fillRect(obj.getXPoint(p.x,k) - 2, obj.getYPoint(p.y) - 2, 4, 4);//draws a rect at point t,t of size 4,4
+                //check if the mouse point is Near one of these particular points: if so set the mousePointIndex to this i value.
+                var ix = obj.getXPoint(p.x,k);
+                var iy = obj.getYPoint(p.y);
+                if (obj.mousePoint.x > (ix - 8) && obj.mousePoint.x < (ix + 8) && obj.mousePoint.y > (iy - 8) && obj.mousePoint.y < (iy + 8)) {
+                    //this means current point is within 16 pixels of a point:
+                    if (numMPI <= 0) {
+                        obj.data[k].mousePointIndex = i;
+                        numMPI++;
+                    }
                 }
             }
         }
+        
     }
 }
 
