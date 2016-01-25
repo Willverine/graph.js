@@ -17,6 +17,7 @@ function FDO(o,c) {
     this.method = null;
     this.colour = c;
     this.mousePointIndex = null;
+	this.fillColour = "rgba(255,150,0,0.4)";
 }
 //add prototype methods:
 FDO.prototype.getX = function (i) { return (this.data[i].x + this.origin.x); };//asusming they are both POINT type objects
